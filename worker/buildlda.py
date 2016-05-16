@@ -8,14 +8,19 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 from sklearn.decomposition import LatentDirichletAllocation
 from worker.models import JobDescription
+from worker.helperclasses.dictionary import Dictionary
 
 
 class BuildLda:
     def __init__(self):
+        # Create dictionary
+        self.dictionary = Dictionary()
+        self.topics = ['Topic {}'.format(i) for i in range(1,31)]
+
+    def build_object(self):
         self.build_model()
         self.transform_set()
         self.build_nearest_neighbours()
-
 
     def build_model(self):
         print('Building LDA')
@@ -26,7 +31,7 @@ class BuildLda:
         for string in strings:
             if string['body'] not in seen_strings:
                 seen_strings.add(string['body'])
-                data_samples.append({'url': string['url'], 'string': self.clean_string(string['body'])})
+                data_samples.append({'url': string['url'], 'string': self.dictionary.clean_string(string['body'])})
 
         self.data_samples = DataFrame(data_samples)
 
@@ -48,12 +53,20 @@ class BuildLda:
         print()
         print("\nTopics in LDA model:")
         tf_feature_names = self.tf_vectorizer.get_feature_names()
+        self.create_word_topics(self.lda, tf_feature_names)
         self.print_top_words(self.lda, tf_feature_names, n_top_words)
 
-    def test_single_doc(self, string):
-        data_samples = DataFrame([{'string': self.clean_string(string)}])
+    def test_single_doc(self, string, print_topics=True):
+        data_samples = DataFrame([{'string': self.dictionary.clean_string(string)}])
         test = self.tf_vectorizer.transform(data_samples['string'])
-        return self.lda.transform(test)
+        lda_result = self.lda.transform(test)
+        if print_topics:
+            top_tags = []
+            index_set = sorted(range(len(lda_result[0])), key=lambda i: lda_result[0][i], reverse=True)[:3]
+            for index in index_set:
+                top_tags.append(self.topics[index])
+            print('Tags: ' + ', '.join(top_tags))
+        return lda_result
 
     def transform_set(self):
         print('Getting LDA Transformation')
@@ -81,11 +94,10 @@ class BuildLda:
 
     def print_top_words(self, model, feature_names, n_top_words):
         for topic_idx, topic in enumerate(model.components_):
-            print("Topic "+str(topic_idx)+": "+" ".join([feature_names[i]
+            print(self.topics[topic_idx]+": "+" ".join([feature_names[i]
                             for i in topic.argsort()[:-n_top_words - 1:-1]]))
         print()
 
-    def clean_string(self, string):
-        # 2. Remove non-letters
-        letters_only = re.sub("[^a-zA-Z]", " ", string)
-        return letters_only
+    def create_word_topics(self, model, feature_names):
+        for topic_idx, topic in enumerate(model.components_):
+            self.topics[topic_idx] = "_".join([feature_names[i] for i in topic.argsort()[:-3 - 1:-1]])

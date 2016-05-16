@@ -5,6 +5,7 @@ GetSeekJobDescription()
 # Build Model
 from worker.buildlda import BuildLda
 lda_model = BuildLda()
+lda_model.build_object()
 from sklearn.externals import joblib
 joblib.dump(lda_model, 'worker/pickled_model/lda_model.pkl')
 
