@@ -35,10 +35,10 @@ class BuildLda:
 
         self.data_samples = DataFrame(data_samples)
 
-        n_features = 20000
-        n_topics = 30
+        n_features = 10000
+        n_topics = 15
         n_top_words = 10
-        max_iter = 200
+        max_iter = 40
 
         self.tf_vectorizer = CountVectorizer(max_features=n_features,
                                         stop_words='english')
@@ -56,17 +56,19 @@ class BuildLda:
         self.create_word_topics(self.lda, tf_feature_names)
         self.print_top_words(self.lda, tf_feature_names, n_top_words)
 
-    def test_single_doc(self, string, print_topics=True):
+    def test_single_doc(self, string):
         data_samples = DataFrame([{'string': self.dictionary.clean_string(string)}])
         test = self.tf_vectorizer.transform(data_samples['string'])
         lda_result = self.lda.transform(test)
-        if print_topics:
-            top_tags = []
-            index_set = sorted(range(len(lda_result[0])), key=lambda i: lda_result[0][i], reverse=True)[:3]
-            for index in index_set:
-                top_tags.append(self.topics[index])
-            print('Tags: ' + ', '.join(top_tags))
-        return lda_result
+        top_tags = []
+        return_value = {'lda_result': lda_result, 'tags': []}
+        index_set = sorted(range(len(lda_result[0])), key=lambda i: lda_result[0][i], reverse=True)
+        position = 0
+        for index in index_set:
+            return_value['tags'].append({'tag': self.topics[index], 'position': position, 'score': lda_result[0][index]})
+            top_tags.append(self.topics[index])
+            position += 1
+        return return_value
 
     def transform_set(self):
         print('Getting LDA Transformation')
@@ -78,19 +80,27 @@ class BuildLda:
         self.nbrs = NearestNeighbors(n_neighbors=10, algorithm='ball_tree').fit(self.results)
 
     def get_neighbours(self, string, print=True):
-        single_doc = self.test_single_doc(string)
-        distances, indices = self.nbrs.kneighbors(single_doc)
+        return_result = self.test_single_doc(string)
+        return_result['distances'], return_result['indices'] = self.nbrs.kneighbors(return_result['lda_result'])
 
         if print:
-            self.print_neighbours(indices[0])
+            self.print_neighbours(return_result['indices'][0])
+        return_result['neighbours'] = self.return_neighbours(return_result['indices'][0], return_result['distances'][0])
 
-        return [distances, indices]
+        return {'tags': return_result['tags'], 'neighbours': return_result['neighbours']}
 
     def print_neighbours(self, indices):
         print('Closest 10 jobs:')
         for indice in indices:
             url = self.data_samples.get_value(indice, 'url')
             print('http://www.seek.com.au%s' % url)
+
+    def return_neighbours(self, indices, distances):
+        return_value = []
+        for index in range(len(indices)):
+            url = self.data_samples.get_value(indices[index], 'url')
+            return_value.append({'url': 'http://www.seek.com.au{}'.format(url), 'distance': distances[index]})
+        return return_value
 
     def print_top_words(self, model, feature_names, n_top_words):
         for topic_idx, topic in enumerate(model.components_):

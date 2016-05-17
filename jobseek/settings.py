@@ -37,7 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'djcelery',
+    'kombu.transport.django',
+    'rest_framework',
+    'rest_framework_swagger',
     'worker',
+    'document',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -121,3 +126,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# setup for rest framework
+REST_FRAMEWORK = {
+    'PAGE_SIZE': 10,
+    'PAGINATE_BY_PARAM': 'page_size',     # Allow client to override, using `?page_size=xxx`.
+}
+
+LOGIN_REDIRECT_URL = '/'
