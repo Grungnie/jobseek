@@ -6,3 +6,24 @@ class Document(models.Model):
 
     document_title = models.CharField(max_length=256)
     body = models.TextField()
+
+    tagged = models.BooleanField(default=False)
+
+
+class Tag(models.Model):
+    app_label = 'tag'
+
+    position = models.IntegerField()
+    score = models.FloatField()
+    tag = models.CharField(max_length=256)
+
+    document = models.ForeignKey('document.Document', related_name='tags')
+
+
+class Neighbour(models.Model):
+    app_label = 'neighbour'
+
+    url = models.CharField(max_length=256)
+    distance = models.FloatField()
+
+    document = models.ForeignKey('document.Document', related_name='neighbours')

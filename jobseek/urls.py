@@ -18,9 +18,11 @@ from django.conf.urls import url, include
 from rest_framework.routers import DefaultRouter
 
 from document.views import DocumentViewSet
+from worker.views import WorkerViewSet
 
 router = DefaultRouter()
 router.register(r'document', DocumentViewSet)
+router.register(r'worker', WorkerViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),

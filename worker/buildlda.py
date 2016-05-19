@@ -79,7 +79,7 @@ class BuildLda:
         print('Build Nearest Neighbours')
         self.nbrs = NearestNeighbors(n_neighbors=10, algorithm='ball_tree').fit(self.results)
 
-    def get_neighbours(self, string, print=True):
+    def get_neighbours(self, string, print=False):
         return_result = self.test_single_doc(string)
         return_result['distances'], return_result['indices'] = self.nbrs.kneighbors(return_result['lda_result'])
 

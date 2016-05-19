@@ -16,3 +16,10 @@ class JobDescription(models.Model):
     address_region = models.CharField(max_length=265)
 
     body = models.TextField()
+
+
+class Worker(models.Model):
+    app_label = 'worker'
+
+    worker_name = models.CharField(max_length=56)
+    current_queue = models.CharField(max_length=56)
