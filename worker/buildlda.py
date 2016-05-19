@@ -12,10 +12,11 @@ from worker.helperclasses.dictionary import Dictionary
 
 
 class BuildLda:
-    def __init__(self):
+    def __init__(self, print_list=True):
         # Create dictionary
         self.dictionary = Dictionary()
         self.topics = ['Topic {}'.format(i) for i in range(1,31)]
+        self.print_list = print_list
 
     def build_object(self):
         self.build_model()
@@ -23,7 +24,8 @@ class BuildLda:
         self.build_nearest_neighbours()
 
     def build_model(self):
-        print('Building LDA')
+        if self.print_list:
+            print('Building LDA')
         strings = JobDescription.objects.values('url', 'body')
 
         data_samples = []
@@ -50,11 +52,13 @@ class BuildLda:
 
         self.lda.fit(tf)
 
-        print()
-        print("\nTopics in LDA model:")
+        if self.print_list:
+            print()
+            print("\nTopics in LDA model:")
         tf_feature_names = self.tf_vectorizer.get_feature_names()
         self.create_word_topics(self.lda, tf_feature_names)
-        self.print_top_words(self.lda, tf_feature_names, n_top_words)
+        if self.print_list:
+            self.print_top_words(self.lda, tf_feature_names, n_top_words)
 
     def test_single_doc(self, string):
         data_samples = DataFrame([{'string': self.dictionary.clean_string(string)}])
@@ -71,12 +75,14 @@ class BuildLda:
         return return_value
 
     def transform_set(self):
-        print('Getting LDA Transformation')
+        if self.print_list:
+            print('Getting LDA Transformation')
         vectorizor_data = self.tf_vectorizer.transform(self.data_samples['string'])
         self.results = self.lda.transform(vectorizor_data)
 
     def build_nearest_neighbours(self):
-        print('Build Nearest Neighbours')
+        if self.print_list:
+            print('Build Nearest Neighbours')
         self.nbrs = NearestNeighbors(n_neighbors=10, algorithm='ball_tree').fit(self.results)
 
     def get_neighbours(self, string, print=False):

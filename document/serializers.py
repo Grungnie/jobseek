@@ -19,7 +19,7 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Document
         fields = ("url", "document_title", "body", "tags", "neighbours", )
-        read_only_fields = ("tagged", "url", )
+        read_only_fields = ("url", )
 
     def create(self, validated_data):
         document = super(DocumentSerializer, self).create(validated_data)

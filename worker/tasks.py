@@ -20,7 +20,7 @@ def get_tags(document_id):
     global lda_model
 
     # if this is the first time it is called load the classifier
-    if 'classifier' not in globals():
+    if 'lda_model' not in globals():
         global lda_model
         from sklearn.externals import joblib
         lda_model = joblib.load('worker/pickled_model/lda_model.pkl')
@@ -33,18 +33,41 @@ def get_tags(document_id):
 
     # Write the tags
     for tag in result['tags']:
-        Tag(position=tag['position'],
-            score=tag['score'],
-            tag=tag['tag'],
-            document=document).save()
+        saving = True
+        while saving:
+            try:
+                Tag(position=tag['position'],
+                    score=tag['score'],
+                    tag=tag['tag'],
+                    document=document).save()
+                saving = False
+            except:
+                pass
 
     # Write the neighbours
     for neighbour in result['neighbours']:
-        Neighbour(url=neighbour['url'],
-                  distance=neighbour['distance'],
-                  document=document).save()
+        saving = True
+        while saving:
+            try:
+                Neighbour(url=neighbour['url'],
+                          distance=neighbour['distance'],
+                          document=document).save()
+                saving = False
+            except:
+                pass
 
-    document.tagged = True
+@shared_task
+def build_model():
+    from random import randint
+    from worker.buildlda import BuildLda
+    import os
+    lda_model = BuildLda(print_list=False)
+    lda_model.build_object()
+    from sklearn.externals import joblib
 
-    # Save document
-    document.save()
+    directory = 'worker/pickled_model/{}'.format(randint(0,1000000))
+
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    joblib.dump(lda_model, '{}/lda_model.pkl'.format(directory))

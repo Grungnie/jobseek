@@ -7,8 +7,6 @@ class Document(models.Model):
     document_title = models.CharField(max_length=256)
     body = models.TextField()
 
-    tagged = models.BooleanField(default=False)
-
 
 class Tag(models.Model):
     app_label = 'tag'
